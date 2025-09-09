@@ -1,0 +1,126 @@
+<wxs src="./index.wxs" module="patchTools" />
+
+<view class="container">
+  <!-- <view class="header">
+    <text class="title">贴件管理系统</text>
+    <text class="description">移动端响应式设计，支持手势操作</text>
+  </view> -->
+  
+  <view class="main-content">
+    <view class="workspace">
+      <view class="workspace-header">
+        <text class="workspace-title">工作区</text>
+        <text class="zoom-level">缩放: {{patchTools.formatZoomLevel(zoomLevel)}}</text>
+      </view>
+
+      <!-- 修改底件容器，添加单指移动查看功能 -->
+      <view 
+        class="base-component-container" 
+        id="base-container"
+        bindtouchstart="onContainerTouchStart"
+        bindtouchmove="onContainerTouchMove"
+        bindtouchend="onContainerTouchEnd"
+      >
+        <view 
+          class="base-component" 
+          style="{{patchTools.getWorkspaceTransform(workspaceOffsetX, workspaceOffsetY, zoomLevel, transformOriginX, transformOriginY)}}"
+        >
+          <!-- 可移动区域 -->
+          <view 
+            class="movable-area" 
+            style="{{patchTools.getMovableAreaStyle(movableArea)}}"
+          ></view>
+          
+          <!-- 不可移动区域 -->
+          <view 
+            wx:for="{{nonMovableAreas}}" 
+            wx:key="index" 
+            class="non-movable-area" 
+            style="{{patchTools.getNonMovableAreaStyle(item)}}"
+          ></view>
+          
+          <!-- 贴件 -->
+          <view 
+            wx:for="{{patches}}" 
+            wx:key="index" 
+            class="patch {{item.selected ? 'selected' : ''}}" 
+            data-index="{{index}}"
+            style="{{patchTools.getPatchStyle(item)}}"
+            bindtap="onPatchTap"
+            catchtouchstart="onPatchTouchStart"
+            catchtouchmove="onPatchTouchMove"
+            catchtouchend="onPatchTouchEnd"
+          >
+            <text class="patch-text">{{patchTools.formatPatchNumber(index)}}</text>
+            
+            <!-- 旋转图标（只在选中时显示） -->
+            <view 
+              wx:if="{{item.selected}}" 
+              class="rotate-handle" 
+              data-index="{{index}}"
+              catchtouchstart="onRotateHandleTouchStart"
+              catchtouchmove="onRotateHandleTouchMove"
+              catchtouchend="onRotateHandleTouchEnd"
+            >
+              <text class="rotate-icon">↻</text>
+            </view>
+          </view>
+        </view>
+        <view class="zoom-hint {{showZoomHint ? 'show' : ''}}">双指手势缩放</view>
+      </view>
+    </view>
+    
+    <view class="controls">
+      <view class="control-group">
+        <view class="control-title">
+          <text class="icon">+</text>
+          <text>添加贴件</text>
+        </view>
+        <view class="button-group">
+          <button class="btn-add" bindtap="addPatch" data-size="small">小贴件</button>
+          <button class="btn-add" bindtap="addPatch" data-size="medium">中贴件</button>
+        </view>
+      </view>
+      
+      <view class="status">
+        <view class="control-title">
+          <text class="icon">ℹ</text>
+          <text>状态信息</text>
+        </view>
+        <view class="status-item">
+          <text>当前选中:</text>
+          <text>{{selectedPatchIndex !== null ? patchTools.formatPatchNumber(selectedPatchIndex) : '无'}}</text>
+        </view>
+        <view class="status-item">
+          <text>贴件数量:</text>
+          <text>{{patches.length}}</text>
+        </view>
+        <view class="status-item">
+          <text>状态:</text>
+          <text style="color: {{allValid ? '#2ecc71' : '#e74c3c'}}">{{allValid ? '符合要求' : '不符合要求'}}</text>
+        </view>
+      </view>
+      
+      <!-- <view class="instructions">
+        <view class="control-title">
+          <text class="icon">👆</text>
+          <text>手势操作</text>
+        </view>
+        <view class="gesture-hints">
+          <view class="gesture">
+            <view class="gesture-icon">👆</view>
+            <text>单指拖动贴件</text>
+          </view>
+          <view class="gesture">
+            <view class="gesture-icon">↻</view>
+            <text>拖动旋转图标旋转</text>
+          </view>
+          <view class="gesture">
+            <view class="gesture-icon">🤏</view>
+            <text>双指缩放工作区</text>
+          </view>
+        </view>
+      </view> -->
+    </view>
+  </view>
+</view>

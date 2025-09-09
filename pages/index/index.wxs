@@ -1,0 +1,127 @@
+// 计算工具函数
+var patchTools = {
+  // 计算两点之间的距离
+  getDistance: function(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  },
+  
+  // 计算两点之间的角度
+  getAngle: function(x1, y1, x2, y2) {
+    return Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+  },
+  
+  // 检查两个矩形是否重叠
+  doOverlap: function(rect1, rect2) {
+    return (
+      rect1.left < rect2.right &&
+      rect1.right > rect2.left &&
+      rect1.top < rect2.bottom &&
+      rect1.bottom > rect2.top
+    );
+  },
+  
+  // 检查三个矩形是否有共同重叠区域
+  doThreePatchesOverlap: function(rect1, rect2, rect3) {
+    // 计算三个矩形的重叠区域
+    var left = Math.max(rect1.left, rect2.left, rect3.left);
+    var right = Math.min(rect1.right, rect2.right, rect3.right);
+    var top = Math.max(rect1.top, rect2.top, rect3.top);
+    var bottom = Math.min(rect1.bottom, rect2.bottom, rect3.bottom);
+    
+    // 如果有有效的重叠区域，返回true
+    return left < right && top < bottom;
+  },
+
+  // 获取旋转后的贴件边界矩形
+  getRotatedPatchBounds: function(patch) {
+    if (patch.rotation === 0 || patch.rotation % 360 === 0) {
+      // 没有旋转，直接返回原始边界
+      return {
+        left: patch.left,
+        top: patch.top,
+        right: patch.left + patch.width,
+        bottom: patch.top + patch.height
+      };
+    }
+    
+    // 计算旋转后的边界框
+    var centerX = patch.left + patch.width / 2;
+    var centerY = patch.top + patch.height / 2;
+    var angle = patch.rotation * Math.PI / 180; // 转换为弧度
+    
+    // 四个角的坐标
+    var corners = [
+      { x: patch.left, y: patch.top },
+      { x: patch.left + patch.width, y: patch.top },
+      { x: patch.left + patch.width, y: patch.top + patch.height },
+      { x: patch.left, y: patch.top + patch.height }
+    ];
+    
+    // 旋转四个角
+    var rotatedCorners = [];
+    for (var i = 0; i < corners.length; i++) {
+      var corner = corners[i];
+      // 转换为相对于中心点的坐标
+      var relX = corner.x - centerX;
+      var relY = corner.y - centerY;
+      
+      // 旋转
+      var rotatedX = relX * Math.cos(angle) - relY * Math.sin(angle);
+      var rotatedY = relX * Math.sin(angle) + relY * Math.cos(angle);
+      
+      // 转换回绝对坐标
+      rotatedCorners.push({
+        x: rotatedX + centerX,
+        y: rotatedY + centerY
+      });
+    }
+    
+    // 计算旋转后的边界
+    var xs = [];
+    var ys = [];
+    for (var j = 0; j < rotatedCorners.length; j++) {
+      xs.push(rotatedCorners[j].x);
+      ys.push(rotatedCorners[j].y);
+    }
+    
+    return {
+      left: Math.min.apply(null, xs),
+      top: Math.min.apply(null, ys),
+      right: Math.max.apply(null, xs),
+      bottom: Math.max.apply(null, ys)
+    };
+  },
+
+  // 格式化缩放级别显示
+  formatZoomLevel: function(zoomLevel) {
+    return Math.round(zoomLevel) + '%';
+  },
+
+  // 格式化贴件编号
+  formatPatchNumber: function(index) {
+    return 'P' + (index + 1);
+  },
+
+  // 计算可移动区域样式
+  getMovableAreaStyle: function(movableArea) {
+    return 'left: ' + movableArea.left + 'px; top: ' + movableArea.top + 'px; width: ' + movableArea.width + 'px; height: ' + movableArea.height + 'px;';
+  },
+
+  // 计算不可移动区域样式
+  getNonMovableAreaStyle: function(area) {
+    return 'left: ' + area.left + 'px; top: ' + area.top + 'px; width: ' + area.width + 'px; height: ' + area.height + 'px;';
+  },
+
+  // 计算贴件样式
+  getPatchStyle: function(patch) {
+    var borderColor = patch.isValid ? '#2ecc71' : '#e74c3c';
+    return 'left: ' + patch.left + 'px; top: ' + patch.top + 'px; width: ' + patch.width + 'px; height: ' + patch.height + 'px; transform: rotate(' + patch.rotation + 'deg); border: 2px solid ' + borderColor + ';';
+  },
+
+  // 计算工作区变换样式
+  getWorkspaceTransform: function(workspaceOffsetX, workspaceOffsetY, zoomLevel, transformOriginX, transformOriginY) {
+    return 'transform: translate(' + workspaceOffsetX + 'px, ' + workspaceOffsetY + 'px) scale(' + (zoomLevel / 100) + '); transform-origin: ' + transformOriginX + 'px ' + transformOriginY + 'px;';
+  }
+};
+
+module.exports = patchTools;
