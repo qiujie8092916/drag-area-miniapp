@@ -121,6 +121,11 @@ var patchTools = {
   // 计算工作区变换样式
   getWorkspaceTransform: function(workspaceOffsetX, workspaceOffsetY, zoomLevel, transformOriginX, transformOriginY) {
     return 'transform: translate(' + workspaceOffsetX + 'px, ' + workspaceOffsetY + 'px) scale(' + (zoomLevel / 100) + '); transform-origin: ' + transformOriginX + 'px ' + transformOriginY + 'px;';
+  },
+
+  // 获取区域显示按钮文本
+  getAreaGuideButtonText: function(showAreaGuides) {
+    return showAreaGuides ? '隐藏区域' : '显示区域';
   }
 };
 

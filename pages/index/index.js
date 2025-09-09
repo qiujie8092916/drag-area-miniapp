@@ -11,6 +11,7 @@ Page({
     patches: [],
     selectedPatchIndex: null,
     allValid: true,
+    showAreaGuides: true, // 控制是否显示区域指引
     movableArea: {
       left: 0,
       top: 0,
@@ -497,6 +498,13 @@ Page({
     });
     
     this.checkPatchConditions();
+  },
+
+  // 切换区域指引显示
+  toggleAreaGuides: function() {
+    this.setData({
+      showAreaGuides: !this.data.showAreaGuides
+    });
   },
 
   // 检查贴件是否满足条件

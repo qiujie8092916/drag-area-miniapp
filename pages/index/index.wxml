@@ -10,7 +10,16 @@
     <view class="workspace">
       <view class="workspace-header">
         <text class="workspace-title">工作区</text>
-        <text class="zoom-level">缩放: {{patchTools.formatZoomLevel(zoomLevel)}}</text>
+        <view class="workspace-controls">
+          <text class="zoom-level">缩放: {{patchTools.formatZoomLevel(zoomLevel)}}</text>
+          <button 
+            class="toggle-guide-btn {{showAreaGuides ? 'active' : ''}}" 
+            bindtap="toggleAreaGuides"
+            size="mini"
+          >
+            {{patchTools.getAreaGuideButtonText(showAreaGuides)}}
+          </button>
+        </view>
       </view>
 
       <!-- 修改底件容器，添加单指移动查看功能 -->
@@ -27,12 +36,14 @@
         >
           <!-- 可移动区域 -->
           <view 
+            wx:if="{{showAreaGuides}}"
             class="movable-area" 
             style="{{patchTools.getMovableAreaStyle(movableArea)}}"
           ></view>
           
           <!-- 不可移动区域 -->
           <view 
+            wx:if="{{showAreaGuides}}"
             wx:for="{{nonMovableAreas}}" 
             wx:key="index" 
             class="non-movable-area" 
