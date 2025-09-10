@@ -8,8 +8,9 @@
   background: rgba(255, 255, 255, 0.9);
   border-radius: 16rpx;
   padding: 30rpx;
-  margin-bottom: 30rpx;
+  margin-bottom: 20rpx;
   text-align: center;
+  position: relative;
 }
 
 .title {
@@ -20,9 +21,70 @@
   margin-bottom: 15rpx;
 }
 
-.description {
+.zoom-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
+  position: relative;
+}
+
+.zoom-level {
   font-size: 26rpx;
   color: #7f8c8d;
+}
+
+.zoom-hint {
+  position: absolute;
+  bottom: -50rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 10rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.zoom-hint.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 正反面切换样式 */
+.side-switch {
+  display: flex;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16rpx;
+  padding: 8rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.switch-button {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #7f8c8d;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.switch-button.active {
+  background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%);
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(110, 142, 251, 0.3);
+}
+
+.switch-button:active {
+  transform: scale(0.98);
 }
 
 .main-content {
@@ -59,11 +121,6 @@
   font-size: 32rpx;
   font-weight: bold;
   color: #2c3e50;
-}
-
-.zoom-level {
-  font-size: 26rpx;
-  color: #7f8c8d;
 }
 
 .toggle-guide-btn {
@@ -160,25 +217,6 @@
   color: white;
 }
 
-.zoom-hint {
-  position: absolute;
-  bottom: 20rpx;
-  right: 20rpx;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 10rpx 20rpx;
-  border-radius: 30rpx;
-  font-size: 24rpx;
-  z-index: 10;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.zoom-hint.show {
-  opacity: 1;
-}
-
 .controls {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 16rpx;
@@ -248,42 +286,6 @@ button:active {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: none;
-}
-
-.instructions {
-  margin-top: 40rpx;
-  background: rgba(236, 240, 241, 0.7);
-  padding: 30rpx;
-  border-radius: 24rpx;
-}
-
-.gesture-hints {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30rpx;
-  margin-top: 30rpx;
-}
-
-.gesture {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 20rpx;
-  border-radius: 20rpx;
-}
-
-.gesture-icon {
-  width: 80rpx;
-  height: 80rpx;
-  background: #3498db;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 36rpx;
 }
 
 .confirm-section {

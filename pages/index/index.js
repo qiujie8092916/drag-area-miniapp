@@ -4,28 +4,54 @@ Page({
   data: {
     baseWidth: 0,
     baseHeight: 0,
-    zoomLevel: 100,
-    maxZoomLevel: 200,
-    minZoomLevel: 100,
-    showZoomHint: false,
-    patches: [],
-    selectedPatchIndex: null,
-    allValid: true,
-    showAreaGuides: true, // 控制是否显示区域指引
+    currentSide: 'front', // 当前显示的面：'front' 或 'back'
     generating: false, // 控制生成图片的状态
-    movableArea: {
-      left: 0,
-      top: 0,
-      width: 0,
-      height: 0
-    },
-    nonMovableAreas: [],
     
-    // 工作区缩放和移动相关
-    transformOriginX: 0,
-    transformOriginY: 0,
-    workspaceOffsetX: 0,
-    workspaceOffsetY: 0
+    // 正面数据
+    frontSide: {
+      zoomLevel: 100,
+      maxZoomLevel: 200,
+      minZoomLevel: 100,
+      showZoomHint: false,
+      patches: [],
+      selectedPatchIndex: null,
+      allValid: true,
+      showAreaGuides: true,
+      movableArea: {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0
+      },
+      nonMovableAreas: [],
+      transformOriginX: 0,
+      transformOriginY: 0,
+      workspaceOffsetX: 0,
+      workspaceOffsetY: 0
+    },
+    
+    // 反面数据
+    backSide: {
+      zoomLevel: 100,
+      maxZoomLevel: 200,
+      minZoomLevel: 100,
+      showZoomHint: false,
+      patches: [],
+      selectedPatchIndex: null,
+      allValid: true,
+      showAreaGuides: true,
+      movableArea: {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0
+      },
+      nonMovableAreas: [],
+      transformOriginX: 0,
+      transformOriginY: 0,
+      workspaceOffsetX: 0,
+      workspaceOffsetY: 0
+    }
   },
 
   // 私有变量，不需要触发视图更新
@@ -70,6 +96,43 @@ Page({
     this.initBaseSize();
   },
 
+  // 获取当前面的数据
+  getCurrentSide: function() {
+    return this.data.currentSide === 'front' ? this.data.frontSide : this.data.backSide;
+  },
+
+  // 获取当前面的数据路径
+  getCurrentSidePath: function() {
+    return this.data.currentSide === 'front' ? 'frontSide' : 'backSide';
+  },
+
+  // 更新当前面的数据
+  updateCurrentSide: function(updateData) {
+    const sidePath = this.getCurrentSidePath();
+    const currentSide = this.getCurrentSide();
+    const newSideData = Object.assign({}, currentSide, updateData);
+    
+    this.setData({
+      [sidePath]: newSideData
+    });
+  },
+
+  // 切换正反面
+  switchSide: function(e) {
+    const targetSide = e.currentTarget.dataset.side;
+    if (targetSide === this.data.currentSide) return;
+    
+    this.setData({
+      currentSide: targetSide
+    });
+    
+    // 重置工作区缩放状态
+    this._isWorkspaceZooming = false;
+    this._isWorkspaceMoving = false;
+    this._workspaceInitialDistance = null;
+    this._workspaceDragging = false;
+  },
+
   // 初始化底件尺寸
   initBaseSize: function() {
     const query = wx.createSelectorQuery();
@@ -79,25 +142,59 @@ Page({
         const baseWidth = res[0].width;
         const baseHeight = res[0].height;
         
+        // 计算正面的区域数据
+        const frontMovableArea = this.calculateMovableArea(baseWidth, baseHeight);
+        const frontNonMovableAreas = this.calculateNonMovableAreas(baseWidth, baseHeight);
+        
+        // 计算反面的区域数据（可以不同）
+        const backMovableArea = this.calculateBackMovableArea(baseWidth, baseHeight);
+        const backNonMovableAreas = this.calculateBackNonMovableAreas(baseWidth, baseHeight);
+        
         this.setData({
           baseWidth,
           baseHeight,
-          movableArea: this.calculateMovableArea(baseWidth, baseHeight),
-          nonMovableAreas: this.calculateNonMovableAreas(baseWidth, baseHeight),
-          zoomLevel: 100,
-          transformOriginX: 0,
-          transformOriginY: 0,
-          workspaceOffsetX: 0,
-          workspaceOffsetY: 0
+          frontSide: Object.assign({}, this.data.frontSide, {
+            movableArea: frontMovableArea,
+            nonMovableAreas: frontNonMovableAreas,
+            zoomLevel: 100,
+            transformOriginX: 0,
+            transformOriginY: 0,
+            workspaceOffsetX: 0,
+            workspaceOffsetY: 0
+          }),
+          backSide: Object.assign({}, this.data.backSide, {
+            movableArea: backMovableArea,
+            nonMovableAreas: backNonMovableAreas,
+            zoomLevel: 100,
+            transformOriginX: 0,
+            transformOriginY: 0,
+            workspaceOffsetX: 0,
+            workspaceOffsetY: 0
+          })
         });
         
         // 缓存容器尺寸到私有变量
         this._containerWidth = res[0].width;
         this._containerHeight = res[0].height;
         
-        // 初始添加一个贴件
-        if (this.data.patches.length === 0) {
+        // 为正面和反面初始添加一个贴件
+        if (this.data.frontSide.patches.length === 0) {
+          // 为正面添加贴件
+          this.setData({
+            currentSide: 'front'
+          });
           this.addPatch({ currentTarget: { dataset: { size: 'small' } } });
+        }
+        if (this.data.backSide.patches.length === 0) {
+          // 为反面添加贴件
+          this.setData({
+            currentSide: 'back'
+          });
+          this.addPatch({ currentTarget: { dataset: { size: 'small' } } });
+          // 切换回正面
+          this.setData({
+            currentSide: 'front'
+          });
         } else {
           // 重新检查条件
           this.checkPatchConditions();
@@ -134,10 +231,40 @@ Page({
     ];
   },
 
+  // 计算反面可移动区域（可以与正面不同）
+  calculateBackMovableArea: function(baseWidth, baseHeight) {
+    return {
+      left: (1/6) * baseWidth,
+      top: (1/6) * baseHeight,
+      width: (2/3) * baseWidth,
+      height: (2/3) * baseHeight
+    };
+  },
+
+  // 计算反面不可移动区域（可以与正面不同）
+  calculateBackNonMovableAreas: function(baseWidth, baseHeight) {
+    return [
+      {
+        left: (1/4) * baseWidth,
+        top: (1/4) * baseHeight,
+        width: (1/5) * baseWidth,
+        height: (1/5) * baseHeight
+      },
+      {
+        left: (3/4) * baseWidth,
+        top: (1/2) * baseHeight,
+        width: (1/8) * baseWidth,
+        height: (1/8) * baseHeight
+      }
+    ];
+  },
+
   // 容器触摸开始（用于工作区缩放和拖动）
   onContainerTouchStart: function(e) {
     // 如果正在旋转，则不处理容器触摸
     if (this._rotating) return;
+    
+    const currentSide = this.getCurrentSide();
     
     if (e.touches.length === 2) {
       // 双指手势开始 - 工作区缩放
@@ -159,9 +286,9 @@ Page({
             e.touches[0].clientX, e.touches[0].clientY,
             e.touches[1].clientX, e.touches[1].clientY
           );
-          this._initialZoomLevel = this.data.zoomLevel;
+          this._initialZoomLevel = currentSide.zoomLevel;
           
-          this.setData({
+          this.updateCurrentSide({
             transformOriginX: originX,
             transformOriginY: originY,
             showZoomHint: true
@@ -169,17 +296,17 @@ Page({
           
           // 2秒后隐藏提示
           setTimeout(() => {
-            this.setData({ showZoomHint: false });
+            this.updateCurrentSide({ showZoomHint: false });
           }, 2000);
         }
       });
-    } else if (e.touches.length === 1 && this.data.zoomLevel > 100) {
+    } else if (e.touches.length === 1 && currentSide.zoomLevel > 100) {
       // 单指手势开始 - 工作区拖动（只在放大状态下）
       this._workspaceDragging = true;
       this._workspaceStartX = e.touches[0].clientX;
       this._workspaceStartY = e.touches[0].clientY;
-      this._workspaceInitialOffsetX = this.data.workspaceOffsetX;
-      this._workspaceInitialOffsetY = this.data.workspaceOffsetY;
+      this._workspaceInitialOffsetX = currentSide.workspaceOffsetX;
+      this._workspaceInitialOffsetY = currentSide.workspaceOffsetY;
       this._workspaceMoved = false;
     }
   },
@@ -188,6 +315,8 @@ Page({
   onContainerTouchMove: function(e) {
     // 如果正在旋转，则不处理容器移动
     if (this._rotating) return;
+    
+    const currentSide = this.getCurrentSide();
     
     if (e.touches.length === 2 && this._isWorkspaceZooming) {
       // 双指缩放工作区
@@ -199,23 +328,21 @@ Page({
       // 计算缩放比例，允许小数，最大200%
       const scaleChange = currentDistance / this._workspaceInitialDistance;
       let newZoom = this._initialZoomLevel * scaleChange;
-      newZoom = Math.max(this.data.minZoomLevel, Math.min(this.data.maxZoomLevel, newZoom));
+      newZoom = Math.max(currentSide.minZoomLevel, Math.min(currentSide.maxZoomLevel, newZoom));
 
       // 保留两位小数，防止精度误差
       newZoom = Math.round(newZoom * 100) / 100;
 
-      if (newZoom !== this.data.zoomLevel) {
-        this.setData({ 
-          zoomLevel: newZoom
-        });
+      if (newZoom !== currentSide.zoomLevel) {
+        const updateData = { zoomLevel: newZoom };
         
         // 如果缩放回100%，重置位移
         if (newZoom === 100) {
-          this.setData({
-            workspaceOffsetX: 0,
-            workspaceOffsetY: 0
-          });
+          updateData.workspaceOffsetX = 0;
+          updateData.workspaceOffsetY = 0;
         }
+        
+        this.updateCurrentSide(updateData);
       }
     } else if (e.touches.length === 1 && this._workspaceDragging) {
       // 单指拖动工作区
@@ -239,7 +366,7 @@ Page({
       let newOffsetY = this._workspaceInitialOffsetY + dy;
       
       // 使用缓存的容器尺寸计算拖动限制范围
-      const zoomScale = this.data.zoomLevel / 100;
+      const zoomScale = currentSide.zoomLevel / 100;
       const scaledWidth = this.data.baseWidth * zoomScale;
       const scaledHeight = this.data.baseHeight * zoomScale;
       const containerWidth = this._containerWidth;
@@ -261,8 +388,8 @@ Page({
       newOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newOffsetX));
       newOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newOffsetY));
       
-      // 直接更新，不使用异步查询
-      this.setData({
+      // 直接更新当前面的数据
+      this.updateCurrentSide({
         workspaceOffsetX: newOffsetX,
         workspaceOffsetY: newOffsetY
       });
@@ -291,7 +418,8 @@ Page({
   // 旋转图标触摸开始
   onRotateHandleTouchStart: function(e) {
     const index = e.currentTarget.dataset.index;
-    const patch = this.data.patches[index];
+    const currentSide = this.getCurrentSide();
+    const patch = currentSide.patches[index];
     
     // 获取容器位置
     const query = wx.createSelectorQuery();
@@ -334,7 +462,8 @@ Page({
     }
     
     const index = this._rotatingIndex;
-    const patches = this.data.patches;
+    const currentSide = this.getCurrentSide();
+    const patches = [...currentSide.patches];
     const patch = patches[index];
     
     // 计算当前角度（从中心点到当前触摸点的角度）
@@ -355,7 +484,7 @@ Page({
       rotation: newRotation
     };
     
-    this.setData({ patches });
+    this.updateCurrentSide({ patches });
     this._lastUpdateTime = currentTime;
     
     // 实时检查条件（旋转过程中）
@@ -383,7 +512,8 @@ Page({
     if (this._rotating) return;
     
     const index = e.currentTarget.dataset.index;
-    const patch = this.data.patches[index];
+    const currentSide = this.getCurrentSide();
+    const patch = currentSide.patches[index];
     
     this._patchDragging = true;
     this._patchDraggingIndex = index;
@@ -410,14 +540,15 @@ Page({
     }
     
     const index = this._patchDraggingIndex;
-    const patches = this.data.patches;
+    const currentSide = this.getCurrentSide();
+    const patches = [...currentSide.patches];
     const patch = patches[index];
     
     const dx = e.touches[0].clientX - this._patchStartX;
     const dy = e.touches[0].clientY - this._patchStartY;
     
-    let newLeft = this._patchInitialLeft + dx / (this.data.zoomLevel / 100);
-    let newTop = this._patchInitialTop + dy / (this.data.zoomLevel / 100);
+    let newLeft = this._patchInitialLeft + dx / (currentSide.zoomLevel / 100);
+    let newTop = this._patchInitialTop + dy / (currentSide.zoomLevel / 100);
     
     // 严格限制在底件范围内（不能超出四个边缘）
     newLeft = Math.max(0, Math.min(this.data.baseWidth - patch.width, newLeft));
@@ -430,7 +561,7 @@ Page({
       top: newTop
     };
     
-    this.setData({ patches });
+    this.updateCurrentSide({ patches });
     this._lastUpdateTime = currentTime;
     this.checkPatchConditions();
     
@@ -449,12 +580,13 @@ Page({
 
   // 选择贴件
   selectPatch: function(index) {
-    const patches = this.data.patches.map((patch, i) => ({
+    const currentSide = this.getCurrentSide();
+    const patches = currentSide.patches.map((patch, i) => ({
       ...patch,
       selected: i === index
     }));
     
-    this.setData({ 
+    this.updateCurrentSide({ 
       patches,
       selectedPatchIndex: index
     });
@@ -486,14 +618,15 @@ Page({
       isValid: true
     };
     
-    const patches = this.data.patches.map(patch => ({
+    const currentSide = this.getCurrentSide();
+    const patches = currentSide.patches.map(patch => ({
       ...patch,
       selected: false
     }));
     
     patches.push(newPatch);
     
-    this.setData({ 
+    this.updateCurrentSide({ 
       patches,
       selectedPatchIndex: patches.length - 1
     });
@@ -503,14 +636,16 @@ Page({
 
   // 切换区域指引显示
   toggleAreaGuides: function() {
-    this.setData({
-      showAreaGuides: !this.data.showAreaGuides
+    const currentSide = this.getCurrentSide();
+    this.updateCurrentSide({
+      showAreaGuides: !currentSide.showAreaGuides
     });
   },
 
   // 生成工作区快照
   generateSnapshot: function() {
-    if (!this.data.allValid || this.data.generating) {
+    // 检查正反面是否都满足条件
+    if (!this.data.frontSide.allValid || !this.data.backSide.allValid || this.data.generating) {
       return;
     }
 
@@ -522,47 +657,44 @@ Page({
     this.setData({ generating: true });
 
     // 临时隐藏区域指引
-    const originalShowAreaGuides = this.data.showAreaGuides;
-    this.setData({ showAreaGuides: false });
+    const originalFrontShowAreaGuides = this.data.frontSide.showAreaGuides;
+    const originalBackShowAreaGuides = this.data.backSide.showAreaGuides;
+    
+    this.setData({
+      frontSide: Object.assign({}, this.data.frontSide, { showAreaGuides: false }),
+      backSide: Object.assign({}, this.data.backSide, { showAreaGuides: false })
+    });
 
     // 等待UI更新完成后再生成图片
     setTimeout(() => {
-      this.createCanvasSnapshot().then((imagePath) => {
+      Promise.all([
+        this.createCanvasSnapshot('front'),
+        this.createCanvasSnapshot('back')
+      ]).then((imagePaths) => {
         wx.hideLoading();
         this.setData({ 
           generating: false,
-          showAreaGuides: originalShowAreaGuides 
+          frontSide: Object.assign({}, this.data.frontSide, { showAreaGuides: originalFrontShowAreaGuides }),
+          backSide: Object.assign({}, this.data.backSide, { showAreaGuides: originalBackShowAreaGuides })
         });
 
-        // 显示生成成功的提示和图片
+        // 显示生成成功的提示
         wx.showModal({
           title: '快照生成成功',
-          content: '工作区快照已保存到相册',
-          showCancel: false,
-          success: () => {
-            // 保存到相册
-            wx.saveImageToPhotosAlbum({
-              filePath: imagePath,
-              success: () => {
-                wx.showToast({
-                  title: '已保存到相册',
-                  icon: 'success'
-                });
-              },
-              fail: () => {
-                wx.showToast({
-                  title: '保存失败',
-                  icon: 'error'
-                });
-              }
-            });
+          content: `正面和反面快照已生成完成，是否保存到相册？`,
+          success: (res) => {
+            if (res.confirm) {
+              // 依次保存到相册
+              this.saveImagesToAlbum(imagePaths);
+            }
           }
         });
       }).catch((error) => {
         wx.hideLoading();
         this.setData({ 
           generating: false,
-          showAreaGuides: originalShowAreaGuides 
+          frontSide: Object.assign({}, this.data.frontSide, { showAreaGuides: originalFrontShowAreaGuides }),
+          backSide: Object.assign({}, this.data.backSide, { showAreaGuides: originalBackShowAreaGuides })
         });
         wx.showToast({
           title: '生成失败',
@@ -573,9 +705,49 @@ Page({
     }, 100);
   },
 
+  // 保存图片到相册
+  saveImagesToAlbum: function(imagePaths) {
+    let savedCount = 0;
+    const totalCount = imagePaths.length;
+
+    imagePaths.forEach((imagePath, index) => {
+      const sideName = index === 0 ? '正面' : '反面';
+      
+      wx.saveImageToPhotosAlbum({
+        filePath: imagePath,
+        success: () => {
+          savedCount++;
+          wx.showToast({
+            title: `${sideName}已保存`,
+            icon: 'success',
+            duration: 1000
+          });
+          
+          if (savedCount === totalCount) {
+            setTimeout(() => {
+              wx.showToast({
+                title: '全部保存完成',
+                icon: 'success'
+              });
+            }, 1200);
+          }
+        },
+        fail: () => {
+          wx.showToast({
+            title: `${sideName}保存失败`,
+            icon: 'error'
+          });
+        }
+      });
+    });
+  },
+
   // 创建Canvas快照
-  createCanvasSnapshot: function() {
+  createCanvasSnapshot: function(sideType) {
     return new Promise((resolve, reject) => {
+      // 获取指定面的数据
+      const sideData = sideType === 'front' ? this.data.frontSide : this.data.backSide;
+      
       // 获取工作区尺寸
       const query = wx.createSelectorQuery();
       query.select('#base-container').boundingClientRect();
@@ -611,7 +783,7 @@ Page({
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
             // 绘制贴件
-            this.drawPatchesOnCanvas(ctx, canvasWidth, canvasHeight).then(() => {
+            this.drawPatchesOnCanvas(ctx, canvasWidth, canvasHeight, sideData).then(() => {
               // 生成图片
               wx.canvasToTempFilePath({
                 canvas,
@@ -629,9 +801,9 @@ Page({
   },
 
   // 在Canvas上绘制贴件
-  drawPatchesOnCanvas: function(ctx, canvasWidth, canvasHeight) {
+  drawPatchesOnCanvas: function(ctx, canvasWidth, canvasHeight, sideData) {
     return new Promise((resolve) => {
-      const patches = this.data.patches;
+      const patches = sideData.patches;
       let drawCount = 0;
 
       if (patches.length === 0) {
@@ -679,7 +851,8 @@ Page({
 
   // 检查贴件是否满足条件
   checkPatchConditions: function() {
-    const patches = this.data.patches;
+    const currentSide = this.getCurrentSide();
+    const patches = [...currentSide.patches];
     let allValid = true;
     
     for (let i = 0; i < patches.length; i++) {
@@ -689,13 +862,13 @@ Page({
       const patchBounds = this.getRotatedPatchBounds(patch);
       
       // 条件1: 贴件是否完全在可移动区域内（考虑旋转）
-      const inMovableArea = this.isInsideMovableArea(patchBounds);
+      const inMovableArea = this.isInsideMovableArea(patchBounds, currentSide);
       
       // 条件2: 贴件是否不在任何不可移动区域内（考虑旋转）
-      const outsideNonMovable = this.isOutsideNonMovableAreas(patchBounds);
+      const outsideNonMovable = this.isOutsideNonMovableAreas(patchBounds, currentSide);
       
       // 条件3: 贴件重叠部分最多只能由两个贴件组成（考虑旋转）
-      const validOverlap = this.checkOverlapCondition(i, patchBounds);
+      const validOverlap = this.checkOverlapCondition(i, patchBounds, patches);
       
       // 所有条件必须同时满足
       const isValid = inMovableArea && outsideNonMovable && validOverlap;
@@ -710,7 +883,7 @@ Page({
       };
     }
     
-    this.setData({ 
+    this.updateCurrentSide({ 
       patches,
       allValid
     });
@@ -764,12 +937,12 @@ Page({
   },
 
   // 检查是否在可移动区域内
-  isInsideMovableArea: function(patchBounds) {
+  isInsideMovableArea: function(patchBounds, sideData) {
     const movableRect = {
-      left: this.data.movableArea.left,
-      top: this.data.movableArea.top,
-      right: this.data.movableArea.left + this.data.movableArea.width,
-      bottom: this.data.movableArea.top + this.data.movableArea.height
+      left: sideData.movableArea.left,
+      top: sideData.movableArea.top,
+      right: sideData.movableArea.left + sideData.movableArea.width,
+      bottom: sideData.movableArea.top + sideData.movableArea.height
     };
     
     return (
@@ -781,9 +954,9 @@ Page({
   },
 
   // 检查是否不在不可移动区域内
-  isOutsideNonMovableAreas: function(patchBounds) {
-    for (let i = 0; i < this.data.nonMovableAreas.length; i++) {
-      const area = this.data.nonMovableAreas[i];
+  isOutsideNonMovableAreas: function(patchBounds, sideData) {
+    for (let i = 0; i < sideData.nonMovableAreas.length; i++) {
+      const area = sideData.nonMovableAreas[i];
       const nonMovableRect = {
         left: area.left,
         top: area.top,
@@ -806,9 +979,7 @@ Page({
   },
 
   // 检查重叠条件
-  checkOverlapCondition: function(currentIndex, currentBounds) {
-    const patches = this.data.patches;
-    
+  checkOverlapCondition: function(currentIndex, currentBounds, patches) {
     // 检查当前贴件与其他贴件的重叠情况
     for (let i = 0; i < patches.length; i++) {
       if (i === currentIndex) continue;

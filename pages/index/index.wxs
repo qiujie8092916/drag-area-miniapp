@@ -98,7 +98,7 @@ var patchTools = {
   },
 
   // 格式化贴件编号
-  formatPatchNumber: function(index) {
+  formatPatchNumber: function(uuid) {
     return 'P' + (index + 1);
   },
 
@@ -133,7 +133,7 @@ var patchTools = {
     if (generating) {
       return '生成中...';
     }
-    return allValid ? '确认并生成快照' : '请调整贴件位置';
+    return allValid ? '确认并生成双面快照' : '请调整贴件位置';
   },
 
   // 获取确认按钮类名

@@ -1,23 +1,38 @@
 <wxs src="./index.wxs" module="patchTools" />
 
 <view class="container">
-  <!-- <view class="header">
-    <text class="title">贴件管理系统</text>
-    <text class="description">移动端响应式设计，支持手势操作</text>
-  </view> -->
+  <!-- 顶部标题和缩放提示 -->
+  <view class="header">
+    <text class="title">拖拽区域工作台</text>
+    <view class="zoom-info">
+      <text class="zoom-level">{{patchTools.formatZoomLevel(currentSide === 'front' ? frontSide.zoomLevel : backSide.zoomLevel)}}</text>
+      <view class="zoom-hint {{(currentSide === 'front' ? frontSide.showZoomHint : backSide.showZoomHint) ? 'show' : ''}}" style="{{(currentSide === 'front' ? frontSide.showZoomHint : backSide.showZoomHint) ? 'opacity: 1; transform: translateY(0);' : 'opacity: 0; transform: translateY(-10px);'}}">
+        双指放大缩小
+      </view>
+    </view>
+  </view>
+
+  <!-- 正反面切换 -->
+  <view class="side-switch">
+    <view class="switch-button {{currentSide === 'front' ? 'active' : ''}}" bindtap="switchSide" data-side="front">
+      正面
+    </view>
+    <view class="switch-button {{currentSide === 'back' ? 'active' : ''}}" bindtap="switchSide" data-side="back">
+      反面
+    </view>
+  </view>
   
   <view class="main-content">
     <view class="workspace">
       <view class="workspace-header">
-        <text class="workspace-title">工作区</text>
+        <text class="workspace-title">工作区 - {{currentSide === 'front' ? '正面' : '反面'}}</text>
         <view class="workspace-controls">
-          <text class="zoom-level">缩放: {{patchTools.formatZoomLevel(zoomLevel)}}</text>
           <button 
-            class="toggle-guide-btn {{showAreaGuides ? 'active' : ''}}" 
+            class="toggle-guide-btn {{(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides) ? 'active' : ''}}" 
             bindtap="toggleAreaGuides"
             size="mini"
           >
-            {{patchTools.getAreaGuideButtonText(showAreaGuides)}}
+            {{patchTools.getAreaGuideButtonText(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides)}}
           </button>
         </view>
       </view>
@@ -32,19 +47,19 @@
       >
         <view 
           class="base-component" 
-          style="{{patchTools.getWorkspaceTransform(workspaceOffsetX, workspaceOffsetY, zoomLevel, transformOriginX, transformOriginY)}}"
+          style="{{patchTools.getWorkspaceTransform(currentSide === 'front' ? frontSide.workspaceOffsetX : backSide.workspaceOffsetX, currentSide === 'front' ? frontSide.workspaceOffsetY : backSide.workspaceOffsetY, currentSide === 'front' ? frontSide.zoomLevel : backSide.zoomLevel, currentSide === 'front' ? frontSide.transformOriginX : backSide.transformOriginX, currentSide === 'front' ? frontSide.transformOriginY : backSide.transformOriginY)}}"
         >
           <!-- 可移动区域 -->
           <view 
-            wx:if="{{showAreaGuides}}"
+            wx:if="{{(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides)}}"
             class="movable-area" 
-            style="{{patchTools.getMovableAreaStyle(movableArea)}}"
+            style="{{patchTools.getMovableAreaStyle(currentSide === 'front' ? frontSide.movableArea : backSide.movableArea)}}"
           ></view>
           
           <!-- 不可移动区域 -->
           <view 
-            wx:if="{{showAreaGuides}}"
-            wx:for="{{nonMovableAreas}}" 
+            wx:if="{{(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides)}}"
+            wx:for="{{currentSide === 'front' ? frontSide.nonMovableAreas : backSide.nonMovableAreas}}" 
             wx:key="index" 
             class="non-movable-area" 
             style="{{patchTools.getNonMovableAreaStyle(item)}}"
@@ -52,7 +67,7 @@
           
           <!-- 贴件 -->
           <view 
-            wx:for="{{patches}}" 
+            wx:for="{{currentSide === 'front' ? frontSide.patches : backSide.patches}}" 
             wx:key="index" 
             class="patch {{item.selected ? 'selected' : ''}}" 
             data-index="{{index}}"
@@ -77,7 +92,6 @@
             </view>
           </view>
         </view>
-        <view class="zoom-hint {{showZoomHint ? 'show' : ''}}">双指手势缩放</view>
         
         <!-- 用于生成快照的隐藏Canvas -->
         <canvas 
@@ -91,11 +105,11 @@
     <!-- 确认按钮 -->
     <view class="confirm-section">
       <button 
-        class="confirm-btn {{patchTools.getConfirmButtonClass(allValid, generating)}}" 
+        class="confirm-btn {{patchTools.getConfirmButtonClass(frontSide.allValid && backSide.allValid, generating)}}" 
         bindtap="generateSnapshot"
-        disabled="{{!allValid || generating}}"
+        disabled="{{!frontSide.allValid || !backSide.allValid || generating}}"
       >
-        {{patchTools.getConfirmButtonText(allValid, generating)}}
+        {{patchTools.getConfirmButtonText(frontSide.allValid && backSide.allValid, generating)}}
       </button>
     </view>
     
@@ -118,38 +132,25 @@
         </view>
         <view class="status-item">
           <text>当前选中:</text>
-          <text>{{selectedPatchIndex !== null ? patchTools.formatPatchNumber(selectedPatchIndex) : '无'}}</text>
+          <text>{{(currentSide === 'front' ? frontSide.selectedPatchIndex : backSide.selectedPatchIndex) !== null ? patchTools.formatPatchNumber(currentSide === 'front' ? frontSide.selectedPatchIndex : backSide.selectedPatchIndex) : '无'}}</text>
         </view>
-        <view class="status-item">
+        <!-- <view class="status-item">
           <text>贴件数量:</text>
-          <text>{{patches.length}}</text>
+          <text>{{(currentSide === 'front' ? frontSide.patches : backSide.patches).length}}</text>
+        </view> -->
+        <view class="status-item">
+          <text>当前面状态:</text>
+          <text style="color: {{(currentSide === 'front' ? frontSide.allValid : backSide.allValid) ? '#2ecc71' : '#e74c3c'}}">{{(currentSide === 'front' ? frontSide.allValid : backSide.allValid) ? '符合要求' : '不符合要求'}}</text>
         </view>
         <view class="status-item">
-          <text>状态:</text>
-          <text style="color: {{allValid ? '#2ecc71' : '#e74c3c'}}">{{allValid ? '符合要求' : '不符合要求'}}</text>
+          <text>正面状态:</text>
+          <text style="color: {{frontSide.allValid ? '#2ecc71' : '#e74c3c'}}">{{frontSide.allValid ? '✓' : '✗'}}</text>
+        </view>
+        <view class="status-item">
+          <text>反面状态:</text>
+          <text style="color: {{backSide.allValid ? '#2ecc71' : '#e74c3c'}}">{{backSide.allValid ? '✓' : '✗'}}</text>
         </view>
       </view>
-      
-      <!-- <view class="instructions">
-        <view class="control-title">
-          <text class="icon">👆</text>
-          <text>手势操作</text>
-        </view>
-        <view class="gesture-hints">
-          <view class="gesture">
-            <view class="gesture-icon">👆</view>
-            <text>单指拖动贴件</text>
-          </view>
-          <view class="gesture">
-            <view class="gesture-icon">↻</view>
-            <text>拖动旋转图标旋转</text>
-          </view>
-          <view class="gesture">
-            <view class="gesture-icon">🤏</view>
-            <text>双指缩放工作区</text>
-          </view>
-        </view>
-      </view> -->
     </view>
   </view>
 </view>
