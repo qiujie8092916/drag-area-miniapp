@@ -1,0 +1,276 @@
+// Variables
+@border-radius-small: 6rpx;
+@border-radius-medium: 8rpx;
+@border-radius-large: 16rpx;
+@border-radius-xlarge: 20rpx;
+@border-radius-xxlarge: 24rpx;
+@border-radius-round: 50%;
+
+@gap-small: 10rpx;
+@gap-medium: 20rpx;
+
+@font-size-small: 24rpx;
+@font-size-medium: 26rpx;
+@font-size-large: 28rpx;
+
+@color-gray-light: #7f8c8d;
+@color-gray-medium: #6c757d;
+@color-gray-border: #bdc3c7;
+@color-gray-bg: #ecf0f1;
+@color-gray-disabled-bg: rgba(189, 195, 199, 0.5);
+@color-gray-disabled-text: rgba(127, 140, 141, 0.8);
+
+@color-green: #2ecc71;
+@color-green-light: rgba(46, 204, 113, 0.2);
+
+@color-red: #e74c3c;
+@color-red-light: rgba(231, 76, 60, 0.3);
+
+@color-blue: #3498db;
+@color-blue-light: rgba(52, 152, 219, 0.1);
+@color-blue-shadow: rgba(52, 152, 219, 0.5);
+
+@color-purple-gradient-start: #6e8efb;
+@color-purple-gradient-end: #a777e3;
+@color-purple-shadow: rgba(110, 142, 251, 0.3);
+
+@color-white: white;
+@color-white-transparent: rgba(255, 255, 255, 0.9);
+@color-black-overlay: rgba(0, 0, 0, 0.6);
+@color-black-shadow: rgba(0, 0, 0, 0.2);
+
+@z-index-base: 10;
+@z-index-high: 1000;
+@z-index-highest: 1001;
+
+// Mixins
+.flex-center() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hardware-acceleration() {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.button-reset() {
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+.circle-handle(@size: 40rpx, @bg-color: @color-red) {
+  position: absolute;
+  width: @size;
+  height: @size;
+  background: @bg-color;
+  border-radius: @border-radius-round;
+  .flex-center();
+  z-index: @z-index-highest;
+  box-shadow: 0 4rpx 8rpx @color-black-shadow;
+}
+
+// Main styles
+.drag-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: @gap-medium;
+
+  .zoom-info {
+    .flex-center();
+    gap: @gap-medium;
+    position: relative;
+
+    .zoom-level {
+      font-size: @font-size-medium;
+      color: @color-gray-light;
+    }
+
+    .zoom-hint {
+      position: absolute;
+      bottom: -50rpx;
+      left: 50%;
+      transform: translateX(-50%);
+      background: @color-black-overlay;
+      color: @color-white;
+      padding: @gap-small @gap-medium;
+      border-radius: 30rpx;
+      font-size: @font-size-small;
+      z-index: @z-index-base;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s ease;
+
+      &.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+  }
+
+  .base-component-container {
+    overflow: visible;
+    position: relative;
+    border: 2rpx solid @color-gray-border;
+    border-radius: @border-radius-xxlarge;
+    background: @color-gray-bg;
+    touch-action: none;
+    .hardware-acceleration();
+    margin: 0 auto;
+
+    .base-component {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      .hardware-acceleration();
+      transition: none; // 移除过渡效果，避免拖动时的延迟
+
+      .background-image {
+        width: 100%;
+        height: 100%;
+        border-radius: @border-radius-xlarge;
+      }
+
+      .movable-area {
+        position: absolute;
+        background: @color-green-light;
+        border: 2rpx dashed @color-green;
+      }
+
+      .non-movable-area {
+        position: absolute;
+        background: @color-red-light;
+        border: 2rpx dashed @color-red;
+      }
+
+      .patch {
+        position: absolute;
+        .flex-center();
+        color: @color-white;
+        font-weight: bold;
+        user-select: none;
+        touch-action: none;
+        .hardware-acceleration();
+        transform-origin: center center;
+        overflow: visible;
+        border-radius: @border-radius-medium;
+
+        &.selected {
+          z-index: @z-index-high;
+        }
+
+        .patch-image {
+          width: 100%;
+          height: 100%;
+          border-radius: @border-radius-small;
+        }
+
+        .delete-handle {
+          .circle-handle(40rpx, @color-red);
+          right: -20rpx;
+          top: -20rpx;
+
+          .delete-icon {
+            font-size: @font-size-small;
+            color: @color-white;
+            font-weight: bold;
+          }
+        }
+
+        .rotate-handle {
+          .circle-handle(40rpx, @color-blue);
+          right: -20rpx;
+          bottom: -20rpx;
+
+          .rotate-icon {
+            font-size: @font-size-large;
+            color: @color-white;
+          }
+        }
+      }
+    }
+
+    #snapshot-canvas {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+    }
+  }
+
+  .status-info {
+    display: flex;
+    justify-content: space-around;
+    padding: @gap-medium;
+    background: @color-white-transparent;
+    border-radius: @border-radius-large;
+    margin: 0 auto;
+    width: fit-content;
+
+    .status-item {
+      .flex-center();
+      gap: @gap-small;
+      font-size: @font-size-large;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: @gap-medium;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .toggle-guide-btn {
+      padding: 8rpx 16rpx !important;
+      font-size: @font-size-small !important;
+      background: rgba(108, 117, 125, 0.1) !important;
+      color: @color-gray-medium !important;
+      border: 2rpx solid @color-gray-medium !important;
+      border-radius: @border-radius-xlarge !important;
+      transition: all 0.3s ease;
+
+      &.active {
+        background: @color-blue-light !important;
+        color: @color-blue !important;
+        border-color: @color-blue !important;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .confirm-btn {
+      padding: @gap-medium 40rpx !important;
+      border-radius: @border-radius-large !important;
+      font-size: @font-size-large !important;
+      font-weight: 600 !important;
+      border: none !important;
+      transition: all 0.3s ease;
+      min-width: 200rpx;
+
+      &.enabled {
+        background: linear-gradient(135deg, @color-purple-gradient-start 0%, @color-purple-gradient-end 100%) !important;
+        color: @color-white !important;
+        box-shadow: 0 8rpx 16rpx @color-purple-shadow;
+
+        &:active {
+          transform: scale(0.98);
+          box-shadow: 0 4rpx 8rpx @color-purple-shadow;
+        }
+      }
+
+      &.disabled {
+        background: @color-gray-disabled-bg !important;
+        color: @color-gray-disabled-text !important;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

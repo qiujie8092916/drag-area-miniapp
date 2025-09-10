@@ -131,30 +131,31 @@ var patchTools = {
   },
 
   // 计算贴件样式（相对于图片位置）
-  getPatchStyleRelativeToImage: function(patch, imageInfo) {
+  getPatchStyleRelativeToImage: function(patch, imageInfo, isSelected) {
     if (!imageInfo.loaded) {
       return 'display: none;';
     }
     var absoluteLeft = imageInfo.left + patch.left;
     var absoluteTop = imageInfo.top + patch.top;
-    var borderColor = patch.isValid ? '#2ecc71' : '#e74c3c';
-    return 'position: absolute; left: ' + absoluteLeft + 'px; top: ' + absoluteTop + 'px; width: ' + patch.width + 'px; height: ' + patch.height + 'px; transform: rotate(' + patch.rotation + 'deg); border: 2px solid ' + borderColor + ';';
-  },
-
-  // 计算可移动区域样式（保留原方法兼容性）
-  getMovableAreaStyle: function(movableArea) {
-    return 'left: ' + movableArea.left + 'px; top: ' + movableArea.top + 'px; width: ' + movableArea.width + 'px; height: ' + movableArea.height + 'px;';
-  },
-
-  // 计算不可移动区域样式（保留原方法兼容性）
-  getNonMovableAreaStyle: function(area) {
-    return 'left: ' + area.left + 'px; top: ' + area.top + 'px; width: ' + area.width + 'px; height: ' + area.height + 'px;';
-  },
-
-  // 计算贴件样式（保留原方法兼容性）
-  getPatchStyle: function(patch) {
-    var borderColor = patch.isValid ? '#2ecc71' : '#e74c3c';
-    return 'left: ' + patch.left + 'px; top: ' + patch.top + 'px; width: ' + patch.width + 'px; height: ' + patch.height + 'px; transform: rotate(' + patch.rotation + 'deg); border: 2px solid ' + borderColor + ';';
+    
+    // 根据状态确定边框颜色和宽度
+    var borderColor = '';
+    var borderWidth = '0rpx';
+    
+    if (!patch.isValid) {
+      // 无效时：红色边框 (最高优先级)
+      borderColor = '#c1272d';
+      borderWidth = '1rpx';
+    } else if (isSelected) {
+      // 激活且有效时：橙色边框
+      borderColor = '#ffb50f';
+      borderWidth = '1rpx';
+    }
+    // 未激活且有效时：无边框（borderWidth = '0rpx'）
+    
+    var borderStyle = borderWidth === '0rpx' ? '' : 'border: ' + borderWidth + ' solid ' + borderColor + ';';
+    
+    return 'position: absolute; left: ' + absoluteLeft + 'px; top: ' + absoluteTop + 'px; width: ' + patch.width + 'px; height: ' + patch.height + 'px; transform: rotate(' + patch.rotation + 'deg); ' + borderStyle;
   },
 
   // 计算工作区变换样式

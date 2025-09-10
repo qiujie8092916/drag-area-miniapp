@@ -1,1 +1,5 @@
-{}
+{
+  "usingComponents": {
+    "drag-workspace": "../../components/drag-workspace/drag-workspace"
+  }
+}

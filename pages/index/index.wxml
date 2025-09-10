@@ -1,15 +1,7 @@
-<wxs src="./index.wxs" module="patchTools" />
-
 <view class="container">
-  <!-- 顶部标题和缩放提示 -->
+  <!-- 顶部标题 -->
   <view class="header">
     <text class="title">拖拽区域工作台</text>
-    <view class="zoom-info">
-      <text class="zoom-level">{{patchTools.formatZoomLevel(currentSide === 'front' ? frontSide.zoomLevel : backSide.zoomLevel)}}</text>
-      <view class="zoom-hint {{(currentSide === 'front' ? frontSide.showZoomHint : backSide.showZoomHint) ? 'show' : ''}}" style="{{(currentSide === 'front' ? frontSide.showZoomHint : backSide.showZoomHint) ? 'opacity: 1; transform: translateY(0);' : 'opacity: 0; transform: translateY(-10px);'}}">
-        双指放大缩小
-      </view>
-    </view>
   </view>
 
   <!-- 正反面切换 -->
@@ -23,96 +15,29 @@
   </view>
   
   <view class="main-content">
+    <!-- 工作区组件 -->
     <view class="workspace">
       <view class="workspace-header">
         <text class="workspace-title">工作区 - {{currentSide === 'front' ? '正面' : '反面'}}</text>
-        <view class="workspace-controls">
-          <button 
-            class="toggle-guide-btn {{(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides) ? 'active' : ''}}" 
-            bindtap="toggleAreaGuides"
-            size="mini"
-          >
-            {{patchTools.getAreaGuideButtonText(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides)}}
-          </button>
-        </view>
       </view>
-
-      <!-- 修改底件容器，添加单指移动查看功能 -->
-      <view 
-        class="base-component-container" 
-        id="base-container"
-        bindtouchstart="onContainerTouchStart"
-        bindtouchmove="onContainerTouchMove"
-        bindtouchend="onContainerTouchEnd"
-      >
-        <view 
-          class="base-component" 
-          style="{{patchTools.getWorkspaceTransform(currentSide === 'front' ? frontSide.workspaceOffsetX : backSide.workspaceOffsetX, currentSide === 'front' ? frontSide.workspaceOffsetY : backSide.workspaceOffsetY, currentSide === 'front' ? frontSide.zoomLevel : backSide.zoomLevel, currentSide === 'front' ? frontSide.transformOriginX : backSide.transformOriginX, currentSide === 'front' ? frontSide.transformOriginY : backSide.transformOriginY)}}"
-        >
-          <!-- 可移动区域 -->
-          <view 
-            wx:if="{{(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides)}}"
-            class="movable-area" 
-            style="{{patchTools.getMovableAreaStyle(currentSide === 'front' ? frontSide.movableArea : backSide.movableArea)}}"
-          ></view>
-          
-          <!-- 不可移动区域 -->
-          <view 
-            wx:if="{{(currentSide === 'front' ? frontSide.showAreaGuides : backSide.showAreaGuides)}}"
-            wx:for="{{currentSide === 'front' ? frontSide.nonMovableAreas : backSide.nonMovableAreas}}" 
-            wx:key="index" 
-            class="non-movable-area" 
-            style="{{patchTools.getNonMovableAreaStyle(item)}}"
-          ></view>
-          
-          <!-- 贴件 -->
-          <view 
-            wx:for="{{currentSide === 'front' ? frontSide.patches : backSide.patches}}" 
-            wx:key="index" 
-            class="patch {{item.selected ? 'selected' : ''}}" 
-            data-index="{{index}}"
-            style="{{patchTools.getPatchStyle(item)}}"
-            bindtap="onPatchTap"
-            catchtouchstart="onPatchTouchStart"
-            catchtouchmove="onPatchTouchMove"
-            catchtouchend="onPatchTouchEnd"
-          >
-            <text class="patch-text">{{patchTools.formatPatchNumber(index)}}</text>
-            
-            <!-- 旋转图标（只在选中时显示） -->
-            <view 
-              wx:if="{{item.selected}}" 
-              class="rotate-handle" 
-              data-index="{{index}}"
-              catchtouchstart="onRotateHandleTouchStart"
-              catchtouchmove="onRotateHandleTouchMove"
-              catchtouchend="onRotateHandleTouchEnd"
-            >
-              <text class="rotate-icon">↻</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 用于生成快照的隐藏Canvas -->
-        <canvas 
-          type="2d" 
-          id="snapshot-canvas"
-          style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px;"
-        ></canvas>
-      </view>
+      
+      <drag-workspace 
+        current-side="{{currentSide}}"
+        show-area-guides-primitive="{{showAreaGuidesPrimitive}}"
+        main-primitive="{{mainPrimitive}}"
+        patches-primitive="{{patchesPrimitive}}"
+        movable-area-primitive="{{movableAreaPrimitive}}"
+        non-movable-areas-primitive="{{nonMovableAreasPrimitive}}"
+        bind:areaGuidesChange="onAreaGuidesChange"
+        bind:patchActivate="onPatchActivate"
+        bind:patchDelete="onPatchDelete"
+        bind:snapshotGenerated="onSnapshotGenerated"
+        bind:hideAreaGuidesForSnapshot="onHideAreaGuidesForSnapshot"
+        bind:restoreAreaGuidesAfterSnapshot="onRestoreAreaGuidesAfterSnapshot"
+      />
     </view>
     
-    <!-- 确认按钮 -->
-    <view class="confirm-section">
-      <button 
-        class="confirm-btn {{patchTools.getConfirmButtonClass(frontSide.allValid && backSide.allValid, generating)}}" 
-        bindtap="generateSnapshot"
-        disabled="{{!frontSide.allValid || !backSide.allValid || generating}}"
-      >
-        {{patchTools.getConfirmButtonText(frontSide.allValid && backSide.allValid, generating)}}
-      </button>
-    </view>
-    
+    <!-- 控制面板 -->
     <view class="controls">
       <view class="control-group">
         <view class="control-title">
@@ -122,33 +47,7 @@
         <view class="button-group">
           <button class="btn-add" bindtap="addPatch" data-size="small">小贴件</button>
           <button class="btn-add" bindtap="addPatch" data-size="medium">中贴件</button>
-        </view>
-      </view>
-      
-      <view class="status">
-        <view class="control-title">
-          <text class="icon">ℹ</text>
-          <text>状态信息</text>
-        </view>
-        <view class="status-item">
-          <text>当前选中:</text>
-          <text>{{(currentSide === 'front' ? frontSide.selectedPatchIndex : backSide.selectedPatchIndex) !== null ? patchTools.formatPatchNumber(currentSide === 'front' ? frontSide.selectedPatchIndex : backSide.selectedPatchIndex) : '无'}}</text>
-        </view>
-        <!-- <view class="status-item">
-          <text>贴件数量:</text>
-          <text>{{(currentSide === 'front' ? frontSide.patches : backSide.patches).length}}</text>
-        </view> -->
-        <view class="status-item">
-          <text>当前面状态:</text>
-          <text style="color: {{(currentSide === 'front' ? frontSide.allValid : backSide.allValid) ? '#2ecc71' : '#e74c3c'}}">{{(currentSide === 'front' ? frontSide.allValid : backSide.allValid) ? '符合要求' : '不符合要求'}}</text>
-        </view>
-        <view class="status-item">
-          <text>正面状态:</text>
-          <text style="color: {{frontSide.allValid ? '#2ecc71' : '#e74c3c'}}">{{frontSide.allValid ? '✓' : '✗'}}</text>
-        </view>
-        <view class="status-item">
-          <text>反面状态:</text>
-          <text style="color: {{backSide.allValid ? '#2ecc71' : '#e74c3c'}}">{{backSide.allValid ? '✓' : '✗'}}</text>
+          <button class="btn-add" bindtap="addPatch" data-size="large">大贴件</button>
         </view>
       </view>
     </view>

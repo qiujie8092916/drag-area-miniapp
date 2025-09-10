@@ -1,0 +1,130 @@
+<wxs src="./drag-workspace.wxs" module="patchTools" />
+
+<view class="drag-workspace">
+  <!-- 顶部缩放提示 -->
+  <view class="zoom-info">
+    <text class="zoom-level">{{patchTools.formatZoomLevel(currentSide === 'front' ? frontSide.zoomLevel : backSide.zoomLevel)}}</text>
+    <view class="zoom-hint {{(currentSide === 'front' ? frontSide.showZoomHint : backSide.showZoomHint) ? 'show' : ''}}" style="{{(currentSide === 'front' ? frontSide.showZoomHint : backSide.showZoomHint) ? 'opacity: 1; transform: translateY(0);' : 'opacity: 0; transform: translateY(-10px);'}}">
+      双指放大缩小
+    </view>
+  </view>
+
+  <!-- 工作区容器 -->
+  <view 
+    class="base-component-container" 
+    id="base-container"
+    style="width: 686rpx; height: 760rpx;"
+    bindtouchstart="onContainerTouchStart"
+    bindtouchmove="onContainerTouchMove"
+    bindtouchend="onContainerTouchEnd"
+  >
+    <view 
+      class="base-component" 
+      style="{{patchTools.getWorkspaceTransform(currentSide === 'front' ? frontSide.workspaceOffsetX : backSide.workspaceOffsetX, currentSide === 'front' ? frontSide.workspaceOffsetY : backSide.workspaceOffsetY, currentSide === 'front' ? frontSide.zoomLevel : backSide.zoomLevel, currentSide === 'front' ? frontSide.transformOriginX : backSide.transformOriginX, currentSide === 'front' ? frontSide.transformOriginY : backSide.transformOriginY)}}"
+    >
+      <!-- 背景图片 -->
+      <image 
+        class="background-image"
+        src="{{currentSide === 'front' ? mainPrimitive.front.src : mainPrimitive.back.src}}"
+        mode="aspectFit"
+        style="{{patchTools.getImageStyle(currentSide === 'front' ? frontSide.imageInfo : backSide.imageInfo)}}"
+      />
+      
+      <!-- 可移动区域（相对于图片位置） -->
+      <view 
+        wx:if="{{showAreaGuidesPrimitive[currentSide]}}"
+        class="movable-area" 
+        style="{{patchTools.getMovableAreaStyleRelativeToImage(currentSide === 'front' ? frontSide.movableArea : backSide.movableArea, currentSide === 'front' ? frontSide.imageInfo : backSide.imageInfo)}}"
+      ></view>
+      
+      <!-- 不可移动区域（相对于图片位置） -->
+      <view 
+        wx:if="{{showAreaGuidesPrimitive[currentSide]}}"
+        wx:for="{{currentSide === 'front' ? frontSide.nonMovableAreas : backSide.nonMovableAreas}}" 
+        wx:key="index" 
+        class="non-movable-area" 
+        style="{{patchTools.getNonMovableAreaStyleRelativeToImage(item, currentSide === 'front' ? frontSide.imageInfo : backSide.imageInfo)}}"
+      ></view>
+      
+      <!-- 贴件（相对于图片位置） -->
+      <view 
+        wx:for="{{currentSide === 'front' ? frontSide.patches : backSide.patches}}" 
+        wx:key="uuid" 
+        class="patch {{item.uuid === activePatchId ? 'selected' : ''}}" 
+        data-uuid="{{item.uuid}}"
+        style="{{patchTools.getPatchStyleRelativeToImage(item, currentSide === 'front' ? frontSide.imageInfo : backSide.imageInfo, item.uuid === activePatchId)}}"
+        bindtap="onPatchTap"
+        catchtouchstart="onPatchTouchStart"
+        catchtouchmove="onPatchTouchMove"
+        catchtouchend="onPatchTouchEnd"
+      >
+        <!-- 贴件图片 -->
+        <image 
+          class="patch-image"
+          src="{{item.src}}"
+          mode="aspectFill"
+        />
+        
+        <!-- 删除图标（只在选中时显示） -->
+        <view 
+          wx:if="{{item.uuid === activePatchId}}" 
+          class="delete-handle" 
+          data-uuid="{{item.uuid}}"
+          bindtap="onDeleteHandleTap"
+        >
+          <text class="delete-icon">✕</text>
+        </view>
+        
+        <!-- 旋转图标（只在选中时显示） -->
+        <view 
+          wx:if="{{item.uuid === activePatchId}}" 
+          class="rotate-handle" 
+          data-uuid="{{item.uuid}}"
+          catchtouchstart="onRotateHandleTouchStart"
+          catchtouchmove="onRotateHandleTouchMove"
+          catchtouchend="onRotateHandleTouchEnd"
+        >
+          <text class="rotate-icon">↻</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 用于生成快照的隐藏Canvas -->
+    <canvas 
+      type="2d" 
+      id="snapshot-canvas"
+      style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px;"
+    ></canvas>
+  </view>
+
+  <!-- 状态信息 -->
+  <view class="status-info">
+    <view class="status-item">
+      <text>正面状态:</text>
+      <text style="color: {{frontSide.allValid ? '#2ecc71' : '#e74c3c'}}">{{frontSide.allValid ? '✓' : '✗'}}</text>
+    </view>
+    <view class="status-item">
+      <text>反面状态:</text>
+      <text style="color: {{backSide.allValid ? '#2ecc71' : '#e74c3c'}}">{{backSide.allValid ? '✓' : '✗'}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button 
+      class="toggle-guide-btn {{showAreaGuidesPrimitive[currentSide] ? 'active' : ''}}" 
+      bindtap="toggleAreaGuides"
+      size="mini"
+    >
+      {{patchTools.getAreaGuideButtonText(showAreaGuidesPrimitive[currentSide])}}
+    </button>
+    
+    <button 
+      class="confirm-btn {{patchTools.getConfirmButtonClass(frontSide.allValid && backSide.allValid, generating)}}" 
+      bindtap="generateSnapshot"
+      disabled="{{!frontSide.allValid || !backSide.allValid || generating}}"
+    >
+      {{patchTools.getConfirmButtonText(frontSide.allValid && backSide.allValid, generating)}}
+    </button>
+  </view>
+</view>

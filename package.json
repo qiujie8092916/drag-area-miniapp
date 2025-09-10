@@ -1,0 +1,17 @@
+{
+  "name": "drag-area-miniapp",
+  "version": "1.0.0",
+  "description": "WeChat Mini Program - Drag Area Component",
+  "main": "app.js",
+  "scripts": {
+    "build:less": "lessc components/drag-workspace/drag-workspace.less components/drag-workspace/drag-workspace.wxss",
+    "watch:less": "lessc --watch components/drag-workspace/drag-workspace.less components/drag-workspace/drag-workspace.wxss",
+    "dev": "npm run watch:less"
+  },
+  "devDependencies": {
+    "less": "^4.1.3"
+  },
+  "keywords": ["wechat", "miniprogram", "drag", "component"],
+  "author": "",
+  "license": "MIT"
+}

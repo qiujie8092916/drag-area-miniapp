@@ -1,0 +1,215 @@
+.drag-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.zoom-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
+  position: relative;
+}
+
+.zoom-level {
+  font-size: 26rpx;
+  color: #7f8c8d;
+}
+
+.zoom-hint {
+  position: absolute;
+  bottom: -50rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 10rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.zoom-hint.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.base-component-container {
+  overflow: visible;
+  position: relative;
+  border: 2rpx solid #bdc3c7;
+  border-radius: 24rpx;
+  background: #ecf0f1;
+  touch-action: none;
+  transform: translateZ(0); /* 强制启用硬件加速 */
+  backface-visibility: hidden; /* 防止闪烁 */
+  margin: 0 auto; /* 居中显示 */
+}
+
+.base-component {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  will-change: transform; /* 启用硬件加速 */
+  transition: none; /* 移除过渡效果，避免拖动时的延迟 */
+}
+
+/* 背景图片样式 */
+.background-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 20rpx;
+}
+
+.movable-area {
+  position: absolute;
+  background: rgba(46, 204, 113, 0.2);
+  border: 2rpx dashed #2ecc71;
+}
+
+.non-movable-area {
+  position: absolute;
+  background: rgba(231, 76, 60, 0.3);
+  border: 2rpx dashed #e74c3c;
+}
+
+.patch {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  user-select: none;
+  touch-action: none;
+  will-change: transform; /* 启用硬件加速 */
+  transform-origin: center center; /* 确保变换原点一致 */
+  overflow: visible;
+  border-radius: 8rpx;
+}
+
+.patch.selected {
+  z-index: 1000;
+}
+
+.patch-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 6rpx;
+}
+
+.delete-handle {
+  position: absolute;
+  right: -20rpx;
+  top: -20rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.delete-icon {
+  font-size: 24rpx;
+  color: white;
+  font-weight: bold;
+}
+
+.rotate-handle {
+  position: absolute;
+  right: -20rpx;
+  bottom: -20rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: #3498db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.rotate-icon {
+  font-size: 28rpx;
+  color: white;
+}
+
+.status-info {
+  display: flex;
+  justify-content: space-around;
+  padding: 20rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16rpx;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 28rpx;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.toggle-guide-btn {
+  padding: 8rpx 16rpx !important;
+  font-size: 24rpx !important;
+  background: rgba(108, 117, 125, 0.1) !important;
+  color: #6c757d !important;
+  border: 2rpx solid #6c757d !important;
+  border-radius: 20rpx !important;
+  transition: all 0.3s ease;
+}
+
+.toggle-guide-btn.active {
+  background: rgba(52, 152, 219, 0.1) !important;
+  color: #3498db !important;
+  border-color: #3498db !important;
+}
+
+.toggle-guide-btn:active {
+  transform: scale(0.95);
+}
+
+.confirm-btn {
+  padding: 20rpx 40rpx !important;
+  border-radius: 16rpx !important;
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+  border: none !important;
+  transition: all 0.3s ease;
+  min-width: 200rpx;
+}
+
+.confirm-btn.enabled {
+  background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%) !important;
+  color: white !important;
+  box-shadow: 0 8rpx 16rpx rgba(110, 142, 251, 0.3);
+}
+
+.confirm-btn.enabled:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 8rpx rgba(110, 142, 251, 0.3);
+}
+
+.confirm-btn.disabled {
+  background: rgba(189, 195, 199, 0.5) !important;
+  color: rgba(127, 140, 141, 0.8) !important;
+  cursor: not-allowed;
+}
