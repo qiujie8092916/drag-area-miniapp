@@ -78,7 +78,25 @@
           </view>
         </view>
         <view class="zoom-hint {{showZoomHint ? 'show' : ''}}">双指手势缩放</view>
+        
+        <!-- 用于生成快照的隐藏Canvas -->
+        <canvas 
+          type="2d" 
+          id="snapshot-canvas"
+          style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px;"
+        ></canvas>
       </view>
+    </view>
+    
+    <!-- 确认按钮 -->
+    <view class="confirm-section">
+      <button 
+        class="confirm-btn {{patchTools.getConfirmButtonClass(allValid, generating)}}" 
+        bindtap="generateSnapshot"
+        disabled="{{!allValid || generating}}"
+      >
+        {{patchTools.getConfirmButtonText(allValid, generating)}}
+      </button>
     </view>
     
     <view class="controls">

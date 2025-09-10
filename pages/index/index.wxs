@@ -126,6 +126,19 @@ var patchTools = {
   // 获取区域显示按钮文本
   getAreaGuideButtonText: function(showAreaGuides) {
     return showAreaGuides ? '隐藏区域' : '显示区域';
+  },
+
+  // 获取确认按钮文本
+  getConfirmButtonText: function(allValid, generating) {
+    if (generating) {
+      return '生成中...';
+    }
+    return allValid ? '确认并生成快照' : '请调整贴件位置';
+  },
+
+  // 获取确认按钮类名
+  getConfirmButtonClass: function(allValid, generating) {
+    return (allValid && !generating) ? 'enabled' : 'disabled';
   }
 };
 

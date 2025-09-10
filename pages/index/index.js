@@ -12,6 +12,7 @@ Page({
     selectedPatchIndex: null,
     allValid: true,
     showAreaGuides: true, // 控制是否显示区域指引
+    generating: false, // 控制生成图片的状态
     movableArea: {
       left: 0,
       top: 0,
@@ -504,6 +505,175 @@ Page({
   toggleAreaGuides: function() {
     this.setData({
       showAreaGuides: !this.data.showAreaGuides
+    });
+  },
+
+  // 生成工作区快照
+  generateSnapshot: function() {
+    if (!this.data.allValid || this.data.generating) {
+      return;
+    }
+
+    wx.showLoading({
+      title: '生成图片中...',
+      mask: true
+    });
+
+    this.setData({ generating: true });
+
+    // 临时隐藏区域指引
+    const originalShowAreaGuides = this.data.showAreaGuides;
+    this.setData({ showAreaGuides: false });
+
+    // 等待UI更新完成后再生成图片
+    setTimeout(() => {
+      this.createCanvasSnapshot().then((imagePath) => {
+        wx.hideLoading();
+        this.setData({ 
+          generating: false,
+          showAreaGuides: originalShowAreaGuides 
+        });
+
+        // 显示生成成功的提示和图片
+        wx.showModal({
+          title: '快照生成成功',
+          content: '工作区快照已保存到相册',
+          showCancel: false,
+          success: () => {
+            // 保存到相册
+            wx.saveImageToPhotosAlbum({
+              filePath: imagePath,
+              success: () => {
+                wx.showToast({
+                  title: '已保存到相册',
+                  icon: 'success'
+                });
+              },
+              fail: () => {
+                wx.showToast({
+                  title: '保存失败',
+                  icon: 'error'
+                });
+              }
+            });
+          }
+        });
+      }).catch((error) => {
+        wx.hideLoading();
+        this.setData({ 
+          generating: false,
+          showAreaGuides: originalShowAreaGuides 
+        });
+        wx.showToast({
+          title: '生成失败',
+          icon: 'error'
+        });
+        console.error('生成快照失败:', error);
+      });
+    }, 100);
+  },
+
+  // 创建Canvas快照
+  createCanvasSnapshot: function() {
+    return new Promise((resolve, reject) => {
+      // 获取工作区尺寸
+      const query = wx.createSelectorQuery();
+      query.select('#base-container').boundingClientRect();
+      query.exec((res) => {
+        if (!res[0]) {
+          reject('无法获取工作区尺寸');
+          return;
+        }
+
+        const containerRect = res[0];
+        const canvasWidth = containerRect.width;
+        const canvasHeight = containerRect.height;
+
+        // 创建离屏Canvas
+        this.createSelectorQuery()
+          .select('#snapshot-canvas')
+          .fields({ node: true, size: true })
+          .exec((canvasRes) => {
+            if (!canvasRes[0]) {
+              reject('无法获取Canvas节点');
+              return;
+            }
+
+            const canvas = canvasRes[0].node;
+            const ctx = canvas.getContext('2d');
+
+            // 设置Canvas尺寸
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            // 设置背景色
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // 绘制贴件
+            this.drawPatchesOnCanvas(ctx, canvasWidth, canvasHeight).then(() => {
+              // 生成图片
+              wx.canvasToTempFilePath({
+                canvas,
+                success: (result) => {
+                  resolve(result.tempFilePath);
+                },
+                fail: (error) => {
+                  reject(error);
+                }
+              });
+            }).catch(reject);
+          });
+      });
+    });
+  },
+
+  // 在Canvas上绘制贴件
+  drawPatchesOnCanvas: function(ctx, canvasWidth, canvasHeight) {
+    return new Promise((resolve) => {
+      const patches = this.data.patches;
+      let drawCount = 0;
+
+      if (patches.length === 0) {
+        resolve();
+        return;
+      }
+
+      patches.forEach((patch, index) => {
+        // 创建贴件矩形
+        ctx.save();
+
+        // 计算贴件中心点
+        const centerX = patch.left + patch.width / 2;
+        const centerY = patch.top + patch.height / 2;
+
+        // 移动到中心点并旋转
+        ctx.translate(centerX, centerY);
+        ctx.rotate(patch.rotation * Math.PI / 180);
+
+        // 设置贴件颜色（根据有效性）
+        ctx.fillStyle = patch.isValid ? 'rgba(52, 152, 219, 0.7)' : 'rgba(231, 76, 60, 0.7)';
+        ctx.strokeStyle = patch.isValid ? '#2ecc71' : '#e74c3c';
+        ctx.lineWidth = 2;
+
+        // 绘制贴件矩形
+        ctx.fillRect(-patch.width / 2, -patch.height / 2, patch.width, patch.height);
+        ctx.strokeRect(-patch.width / 2, -patch.height / 2, patch.width, patch.height);
+
+        // 绘制贴件文字
+        ctx.fillStyle = 'white';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`P${index + 1}`, 0, 0);
+
+        ctx.restore();
+
+        drawCount++;
+        if (drawCount === patches.length) {
+          resolve();
+        }
+      });
     });
   },
 

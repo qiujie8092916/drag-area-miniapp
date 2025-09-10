@@ -286,6 +286,51 @@ button:active {
   font-size: 36rpx;
 }
 
+.confirm-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10rpx);
+  border-top: 1rpx solid rgba(189, 195, 199, 0.3);
+  z-index: 1000;
+}
+
+.confirm-btn {
+  width: 100% !important;
+  padding: 28rpx 0 !important;
+  border-radius: 16rpx !important;
+  font-size: 32rpx !important;
+  font-weight: 600 !important;
+  border: none !important;
+  transition: all 0.3s ease;
+}
+
+.confirm-btn.enabled {
+  background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%) !important;
+  color: white !important;
+  box-shadow: 0 8rpx 16rpx rgba(110, 142, 251, 0.3);
+}
+
+.confirm-btn.enabled:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 8rpx rgba(110, 142, 251, 0.3);
+}
+
+.confirm-btn.disabled {
+  background: rgba(189, 195, 199, 0.5) !important;
+  color: rgba(127, 140, 141, 0.8) !important;
+  cursor: not-allowed;
+}
+
+/* 为主内容添加底部间距，避免被确认按钮遮挡 */
+.main-content {
+  padding-bottom: 140rpx;
+}
+
 /* 平板和更大屏幕的响应式设计 */
 @media (min-width: 768px) {
   .main-content {
