@@ -54,9 +54,9 @@
         data-uuid="{{item.uuid}}"
         style="{{patchTools.getPatchStyleRelativeToImage(item, currentSide === 'front' ? frontSide.imageInfo : backSide.imageInfo, item.uuid === activePatchId)}}"
         bindtap="onPatchTap"
-        catchtouchstart="onPatchTouchStart"
-        catchtouchmove="onPatchTouchMove"
-        catchtouchend="onPatchTouchEnd"
+        bindtouchstart="onPatchTouchStart"
+        bindtouchmove="onPatchTouchMove"
+        bindtouchend="onPatchTouchEnd"
       >
         <!-- 贴件图片 -->
         <image 
@@ -70,7 +70,7 @@
           wx:if="{{item.uuid === activePatchId}}" 
           class="delete-handle" 
           data-uuid="{{item.uuid}}"
-          bindtap="onDeleteHandleTap"
+          catchtap="onDeleteHandleTap"
         >
           <text class="delete-icon">✕</text>
         </view>
@@ -121,7 +121,7 @@
     
     <button 
       class="confirm-btn {{patchTools.getConfirmButtonClass(frontSide.allValid && backSide.allValid, generating)}}" 
-      bindtap="generateSnapshot"
+      bindtap="a"
       disabled="{{!frontSide.allValid || !backSide.allValid || generating}}"
     >
       {{patchTools.getConfirmButtonText(frontSide.allValid && backSide.allValid, generating)}}

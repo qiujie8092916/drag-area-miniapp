@@ -1,0 +1,44 @@
+<!-- 示例：如何在 WXML 中使用修改后的 drag-workspace 组件 -->
+
+<view class="page-container">
+  <!-- 状态显示区域 -->
+  <view class="status-bar">
+    <text class="status-text">正面有效: {{frontValid ? '✓' : '✗'}}</text>
+    <text class="status-text">反面有效: {{backValid ? '✓' : '✗'}}</text>
+    <text class="status-text">可生成快照: {{canGenerateSnapshot ? '✓' : '✗'}}</text>
+  </view>
+
+  <!-- 拖拽工作区组件 -->
+  <drag-workspace 
+    id="drag-workspace"
+    current-side="{{currentSide}}"
+    show-area-guides-primitive="{{showAreaGuidesPrimitive}}"
+    main-primitive="{{mainPrimitive}}"
+    patches-primitive="{{patchesPrimitive}}"
+    movable-area-primitive="{{movableAreaPrimitive}}"
+    non-movable-areas-primitive="{{nonMovableAreasPrimitive}}"
+    bind:validityChange="onValidityChange"
+    bind:snapshotGenerated="onSnapshotGenerated"
+    bind:patchActivate="onPatchActivate"
+    bind:patchDelete="onPatchDelete"
+    bind:areaGuidesChange="onAreaGuidesChange"
+    bind:hideAreaGuidesForSnapshot="onHideAreaGuidesForSnapshot"
+    bind:restoreAreaGuidesAfterSnapshot="onRestoreAreaGuidesAfterSnapshot">
+  </drag-workspace>
+
+  <!-- 操作按钮区域 -->
+  <view class="action-buttons">
+    <button 
+      class="generate-btn {{canGenerateSnapshot ? 'active' : 'disabled'}}" 
+      disabled="{{!canGenerateSnapshot}}"
+      bindtap="onGenerateSnapshotTap">
+      生成快照
+    </button>
+    
+    <button 
+      class="check-btn" 
+      bindtap="checkCanGenerateSnapshot">
+      检查状态
+    </button>
+  </view>
+</view>

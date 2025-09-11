@@ -91,7 +91,6 @@
 .drag-workspace .base-component-container .base-component .patch .patch-image {
   width: 100%;
   height: 100%;
-  border-radius: 6rpx;
 }
 .drag-workspace .base-component-container .base-component .patch .delete-handle {
   position: absolute;

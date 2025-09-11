@@ -22,6 +22,7 @@
       </view>
       
       <drag-workspace 
+        id="drag-workspace"
         current-side="{{currentSide}}"
         show-area-guides-primitive="{{showAreaGuidesPrimitive}}"
         main-primitive="{{mainPrimitive}}"

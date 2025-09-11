@@ -142,15 +142,17 @@ Page({
 
     // 从当前面和另一面中找到并删除对应的贴件
     const newPatches = Object.assign({}, this.data.patchesPrimitive);
-    
+
     // 检查正面
     if (newPatches.front) {
-      newPatches.front = newPatches.front.filter(patch => patch.uuid !== uuid);
+      newPatches.front = newPatches.front.filter(
+        (patch) => patch.uuid !== uuid
+      );
     }
-    
+
     // 检查反面
     if (newPatches.back) {
-      newPatches.back = newPatches.back.filter(patch => patch.uuid !== uuid);
+      newPatches.back = newPatches.back.filter((patch) => patch.uuid !== uuid);
     }
 
     this.setData({
@@ -186,6 +188,8 @@ Page({
     console.log("快照生成完成:");
     console.log("正面快照:", frontImagePath);
     console.log("反面快照:", backImagePath);
+
+    this.selectComponent("#drag-workspace").saveImagesToAlbum([]);
 
     // 这里可以处理快照生成完成后的逻辑
     // 例如上传到服务器、显示预览等
